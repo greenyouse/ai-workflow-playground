@@ -1,6 +1,20 @@
 # AiDojo Crew
 
-Welcome to the AiDojo Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Hey this is just a personal project for playing around with workflow systems. It uses [crewAI](https://crewai.com) right now but the framework isn't important.
+
+It'll have a a few general software helper workflows that help augment software engineers doing work.
+It's mostly for me to practicing building AI workflow systems though.
+
+Workflows so far:
+- default crewAI research workflow (boilerplate, will delete)
+- planning for project planning
+
+## Disclaimer
+I set this to run against a local [Gemma4](https://deepmind.google/models/gemma/) model via [Ollama](https://ollama.com/).
+
+Make sure to work through that setup first before running the repo.
+
+It's just the gemma4:e4b model with 128K context so it run on most computers.
 
 ## Installation
 
@@ -18,37 +32,39 @@ Next, navigate to your project directory and install the dependencies:
 ```bash
 crewai install
 ```
-### Customizing
+## Running the Project
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+Here's how to run the two workflows so far:
 
+```bash
+source .venv/bin/activate
+run_crew research
+run_crew planning {idea}
+```
+
+These commands will trigger the differ ai-dojo Crew workflows. They run agnts and assign them tasks to work on.
+
+See the [examples](./example_runs/README.md) to see examples of the workflow performance.
+
+### Project structure
 - Modify `src/ai_dojo/config/agents.yaml` to define your agents
 - Modify `src/ai_dojo/config/tasks.yaml` to define your tasks
 - Modify `src/ai_dojo/crew.py` to add your own logic, tools and specific args
 - Modify `src/ai_dojo/main.py` to add custom inputs for your agents and tasks
 
-## Running the Project
-
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
-
-```bash
-$ crewai run
-```
-
-This command initializes the ai-dojo Crew, assembling the agents and assigning them tasks as defined in your configuration.
-
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
-
-## Understanding Your Crew
-
-The ai-dojo Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
-
-## Support
-
-For support, questions, or feedback regarding the AiDojo Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+## Roadmap
+The general idea is to start with basic workflows, then augment them with progressively more powerful features:
+- RAG
+- Tools
+- Validation
+- Lightweight Planning
+- Tracing
+- Evals
+- Persistance
+- Templates + Approvals
+- Repo memories + Adaptive retrieval
+- Multi-agent workflows
+- Creating a workflow platform
+  - APIs
+  - Async processing
+  - UI
