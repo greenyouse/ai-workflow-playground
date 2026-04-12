@@ -14,7 +14,7 @@ I set this to run against a local [Gemma4](https://deepmind.google/models/gemma/
 
 Make sure to work through that setup first before running the repo.
 
-It's just the gemma4:e4b model with 128K context so it run on most computers.
+It's just the gemma4:e4b model with 128K context so it should run on most computers.
 
 ## Installation
 
