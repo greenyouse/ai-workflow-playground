@@ -15,6 +15,7 @@ train = "ai_dojo.main:train"
 replay = "ai_dojo.main:replay"
 test = "ai_dojo.main:test"
 run_with_trigger = "ai_dojo.main:run_with_trigger"
+run_planning = "ai_dojo.main:run_planning"
 
 [build-system]
 requires = ["hatchling"]

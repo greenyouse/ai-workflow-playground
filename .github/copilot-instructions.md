@@ -1,6 +1,6 @@
 # AI Dojo CrewAI Project — Coding Conventions
 
-This is a CrewAI crew project (`ai_dojo`) that orchestrates multiple AI agents to research and report on topics. **For comprehensive CrewAI API reference, see [AGENTS.md](../AGENTS.md)**.
+This is a CrewAI crew project (`ai_dojo`) that orchestrates multiple AI agents across two workflows: a **research/report** workflow and a **planning** workflow. **For comprehensive CrewAI API reference, see [AGENTS.md](../AGENTS.md)**.
 
 ## Quick Start
 
@@ -22,17 +22,27 @@ crewai log-tasks-outputs  # View latest execution results
 
 **Scripts in pyproject.toml**:
 
-- `ai_dojo` / `run_crew` → `main.py:run()` — Run crew with default topic ("AI LLMs")
-- `train` → `main.py:train()` — Train crew on LLM topic
+- `ai_dojo` / `run_crew` → `main.py:run()` — Run research crew (default) or planning crew with mode arg
+- `run_planning` → `main.py:run_planning()` — Run planning crew directly with an idea argument
+- `train` → `main.py:train()` — Train research crew on LLM topic
 - `test` → `main.py:test()` — Run test harness
 - `replay` → `main.py:replay()` — Replay from specific task ID
+
+**Running the planning workflow**:
+
+```bash
+run_crew planning Build a task management app for remote teams
+run_planning Build a task management app for remote teams
+```
+
+Standalone words after the mode/script name are joined as the idea — no quotes required.
 
 ## Project Structure
 
 ```
 src/ai_dojo/
-  crew.py              # @CrewBase class orchestrating agents and tasks
-  main.py              # Entry points for run, train, test, replay
+  crew.py              # @CrewBase class — research and planning workflows
+  main.py              # Entry points: run (mode-aware), run_planning, train, test, replay
   config/
     agents.yaml        # Agent definitions (role, goal, backstory)
     tasks.yaml         # Task definitions (description, expected_output)
@@ -40,14 +50,29 @@ src/ai_dojo/
     custom_tool.py     # Custom tool template
 ```
 
-### Current Agents
+### Research Workflow Agents
 
-- **researcher**: Uncovers cutting-edge developments in {topic}
+- **researcher**: Uncovers cutting-edge developments in `{topic}`
 - **reporting_analyst**: Creates detailed reports from research findings
+
+### Planning Workflow Agents
+
+- **planner**: Scopes the idea, defines MVP, lists research areas
+- **planning_researcher**: Gathers technical evidence and context for `{idea}`
+- **reviewer**: Critiques the plan for logic flaws and unsupported assumptions
+- **synthesizer**: Produces the final Markdown project plan
+
+### Planning Task Order (sequential)
+
+1. `scoping_task` → `planner`
+2. `context_gathering_task` → `planning_researcher` (context: scoping_task)
+3. `quality_review_task` → `reviewer` (context: scoping_task + context_gathering_task)
+4. `finalization_task` → `synthesizer` (context: all prior tasks) → writes `project_plan.md`
 
 ### Output
 
-- Default output file: `report.md` (in project root)
+- Research: `report.md` (project root)
+- Planning: `project_plan.md` (project root)
 
 ## Code Patterns & Conventions
 
@@ -88,15 +113,24 @@ def research_task(self) -> Task:
 @crew
 def crew(self) -> Crew:
     return Crew(
-        agents=self.agents,
-        tasks=self.tasks,
+        agents=[self.researcher(), self.reporting_analyst()],
+        tasks=[self.research_task(), self.reporting_task()],
         process=Process.sequential,  # or Process.hierarchical
+        verbose=True
+    )
+
+def planning_crew(self) -> Crew:  # No @crew decorator — plain method
+    return Crew(
+        agents=[self.planner(), self.planning_researcher(), ...],
+        tasks=[self.scoping_task(), self.context_gathering_task(), ...],
+        process=Process.sequential,
         verbose=True
     )
 ```
 
 - Always use `Process.sequential` unless hierarchical delegation is needed
-- `self.agents` and `self.tasks` are auto-populated by @agent/@task decorators
+- Use **explicit agent/task lists** (not `self.agents`/`self.tasks`) when multiple workflows share one class
+- Only one method per class should use the `@crew` decorator — additional crew factory methods are plain methods
 
 ### YAML Agent Configuration
 
@@ -134,17 +168,27 @@ research_task:
 ### Running Crew in main.py
 
 ```python
+# Research mode (default)
 def run():
     inputs = {
         'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
+        'current_year': str(datetime.now().year),
     }
     AiDojo().crew().kickoff(inputs=inputs)
+
+# Planning mode — called via run_crew planning <idea> or run_planning <idea>
+def run_planning():
+    idea = ' '.join(sys.argv[1:])  # joins all words after the script name
+    inputs = {
+        'idea': idea,
+        'current_year': str(datetime.now().year),
+    }
+    AiDojo().planning_crew().kickoff(inputs=inputs)
 ```
 
-- Provide all `{variables}` mentioned in agents.yaml and tasks.yaml
-- Use `datetime.now().year` for current year variable
-- Wrap in try/except to catch execution errors
+- Research inputs: `topic`, `current_year`
+- Planning inputs: `idea`, `current_year` — `{idea}` is used in agents.yaml and planning task descriptions
+- Wrap every kickoff in try/except to catch execution errors
 
 ## Common Development Tasks
 
@@ -209,15 +253,16 @@ crewai replay -t <task_id>    # Get task_id from log-tasks-outputs
 
 ## File Locations & Conventions
 
-| What           | Where                            | Notes                                            |
-| -------------- | -------------------------------- | ------------------------------------------------ |
-| Crew class     | `src/ai_dojo/crew.py`            | Edit agents/tasks here; use @CrewBase on class   |
-| Agent defs     | `src/ai_dojo/config/agents.yaml` | Inline variables with `{variable_name}`          |
-| Task defs      | `src/ai_dojo/config/tasks.yaml`  | Keep description/expected_output clear           |
-| Custom tools   | `src/ai_dojo/tools/`             | All BaseTool subclasses go here                  |
-| Entry points   | `src/ai_dojo/main.py`            | Modify run() inputs or add new functions         |
-| Final output   | `report.md`                      | Generated by reporting_task (in root)            |
-| Crew reference | `AGENTS.md`                      | Comprehensive CrewAI API docs (do NOT duplicate) |
+| What            | Where                            | Notes                                            |
+| --------------- | -------------------------------- | ------------------------------------------------ |
+| Crew class      | `src/ai_dojo/crew.py`            | Edit agents/tasks here; use @CrewBase on class   |
+| Agent defs      | `src/ai_dojo/config/agents.yaml` | Inline variables with `{variable_name}`          |
+| Task defs       | `src/ai_dojo/config/tasks.yaml`  | Keep description/expected_output clear           |
+| Custom tools    | `src/ai_dojo/tools/`             | All BaseTool subclasses go here                  |
+| Entry points    | `src/ai_dojo/main.py`            | Modify run() inputs or add new functions         |
+| Research output | `report.md`                      | Generated by reporting_task (in project root)    |
+| Planning output | `project_plan.md`                | Generated by finalization_task (in project root) |
+| Crew reference  | `AGENTS.md`                      | Comprehensive CrewAI API docs (do NOT duplicate) |
 
 ## Key References
 
@@ -233,7 +278,10 @@ crewai replay -t <task_id>    # Get task_id from log-tasks-outputs
 ❌ **Don't** put complicated business logic in `crew.py` — keep it minimal  
 ❌ **Don't** forget to add new `{variables}` to the inputs dict in `main.py`  
 ❌ **Don't** leave commented-out code in agent/task methods  
-❌ **Don't** use `pip install` — always use `uv add` for dependencies
+❌ **Don't** use `pip install` — always use `uv add` for dependencies  
+❌ **Don't** use duplicate keys in YAML — last definition silently wins, breaking earlier agents/tasks  
+❌ **Don't** use `self.agents`/`self.tasks` in crew assembly when multiple workflows share one `@CrewBase` class — always use explicit lists  
+❌ **Don't** add a second `@crew` decorator in the same class — use a plain method for the secondary crew factory
 
 ## Version-Specific Guidance
 
