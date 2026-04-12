@@ -44,7 +44,7 @@ run_crew planning {idea}
 
 These commands will trigger the differ ai-dojo Crew workflows. They run agnts and assign them tasks to work on.
 
-See the [examples](./example_runs/README.md) to see examples of the workflow performance.
+See [these examples](./example_runs/README.md) for the workflows in action.
 
 ### Project structure
 - Modify `src/ai_dojo/config/agents.yaml` to define your agents
