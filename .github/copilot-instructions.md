@@ -82,7 +82,7 @@ src/ai_dojo/
 @agent
 def researcher(self) -> Agent:
     return Agent(
-        config=self.agents_config['researcher'],  # type: ignore[index]
+        config=self.agents_config['researcher'],
         tools=[],  # Add tool instances here if needed
         verbose=True
     )
@@ -98,7 +98,7 @@ def researcher(self) -> Agent:
 @task
 def research_task(self) -> Task:
     return Task(
-        config=self.tasks_config['research_task'],  # type: ignore[index]
+        config=self.tasks_config['research_task'],
         output_file='path/to/output.md'     # Optional: save output
     )
 ```

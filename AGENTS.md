@@ -219,7 +219,7 @@ class ResearchCrew:
     @agent
     def researcher(self) -> Agent:
         return Agent(
-            config=self.agents_config["researcher"],  # type: ignore[index]
+            config=self.agents_config["researcher"], 
             tools=[SerperDevTool()],
             verbose=True,
         )
@@ -227,20 +227,20 @@ class ResearchCrew:
     @agent
     def writer(self) -> Agent:
         return Agent(
-            config=self.agents_config["writer"],  # type: ignore[index]
+            config=self.agents_config["writer"], 
             verbose=True,
         )
 
     @task
     def research_task(self) -> Task:
         return Task(
-            config=self.tasks_config["research_task"],  # type: ignore[index]
+            config=self.tasks_config["research_task"], 
         )
 
     @task
     def writing_task(self) -> Task:
         return Task(
-            config=self.tasks_config["writing_task"],  # type: ignore[index]
+            config=self.tasks_config["writing_task"], 
         )
 
     @crew
@@ -420,7 +420,7 @@ Environment variable default: set `OPENAI_MODEL_NAME=gpt-4o` or `MODEL=gpt-4o` i
 @task
 def analysis_task(self) -> Task:
     return Task(
-        config=self.tasks_config["analysis_task"],  # type: ignore[index]
+        config=self.tasks_config["analysis_task"], 
         context=[self.research_task()],  # Gets output from research_task
     )
 ```
@@ -437,7 +437,7 @@ class Report(BaseModel):
 @task
 def report_task(self) -> Task:
     return Task(
-        config=self.tasks_config["report_task"],  # type: ignore[index]
+        config=self.tasks_config["report_task"], 
         output_pydantic=Report,
     )
 ```

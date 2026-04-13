@@ -23,8 +23,28 @@ def run():
 
     Planning mode:
         run_crew planning <idea>   # idea can be multi-word; no quotes needed
+
+    Implementation planner mode:
+        run_crew implementation <issue>   # issue can be multi-word; no quotes needed
     """
-    if len(sys.argv) > 1 and sys.argv[1] == 'planning':
+    if len(sys.argv) > 1 and sys.argv[1] == 'implementation':
+        if len(sys.argv) < 3:
+            raise Exception(
+                "Implementation mode requires an issue argument.\n"
+                "Usage: run_crew implementation <issue>"
+            )
+        issue = ' '.join(sys.argv[2:])
+        inputs = {
+            'issue': issue,
+            'idea': issue,
+            'topic': issue,
+            'current_year': str(datetime.now().year),
+        }
+        try:
+            AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
+        except Exception as e:
+            raise Exception(f"An error occurred while running the implementation planner crew: {e}")
+    elif len(sys.argv) > 1 and sys.argv[1] == 'planning':
         if len(sys.argv) < 3:
             raise Exception(
                 "Planning mode requires an idea argument.\n"

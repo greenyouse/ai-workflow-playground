@@ -62,3 +62,80 @@ finalization_task:
     uncertainties and risks clearly documented.
   agent: synthesizer
   output_file: 'project_plan.md'
+
+issue_analysis_task:
+  description: >
+    Analyze the following issue: {issue}. Classify it as a bug, feature
+    request, or refactor. Identify the likely technical requirements,
+    possible system impacts, unknowns, and the types of code or
+    documentation context needed before implementation.
+  expected_output: >
+    A structured issue analysis containing: issue type, problem summary,
+    likely requirements, impacted areas, possible side effects, open
+    questions, and a prioritized retrieval strategy for relevant code and
+    documentation context.
+  agent: planner
+
+context_retrieval_task:
+  description: >
+    Based on the issue analysis and retrieval strategy, gather the technical
+    context needed to resolve the issue: {issue}. Retrieve relevant code
+    snippets, API signatures, documentation, dependency relationships, and
+    prior related implementation patterns when available.
+  expected_output: >
+    A structured context packet containing: relevant files or modules, key
+    code snippets, API signatures, dependency or impact notes, related docs
+    or prior art, and unresolved context gaps.
+  agent: researcher
+
+implementation_drafting_task:
+  description: >
+    Using the issue analysis and structured technical context, propose a
+    practical solution for {issue}. Draft the implementation approach,
+    including proposed code changes, relevant tests, and migration or rollout
+    notes only if they are necessary.
+  expected_output: >
+    A draft implementation package containing: solution summary, proposed code
+    changes or pseudocode, test plan and sample test cases, assumptions,
+    affected components, and any required migration or rollout notes.
+  agent: implementer
+
+draft_review_task:
+  description: >
+    Critically evaluate the draft implementation for {issue}. Check for logic
+    errors, missing edge cases, security concerns, architectural misalignment,
+    unsupported assumptions, and inadequate test coverage. Confirm that the
+    proposed implementation actually addresses the original issue without
+    unnecessary scope expansion.
+  expected_output: >
+    A review report containing: major critiques, risks, missing coverage,
+    unsupported assumptions, and specific required revisions to improve the
+    implementation draft.
+  agent: reviewer
+
+final_draft_synthesis_task:
+  description: >
+    Consolidate the issue analysis, technical context, implementation draft,
+    and review feedback into a final Markdown implementation brief for
+    {issue}. Present it in a form a human developer can act on immediately,
+    while preserving important caveats, assumptions, and unresolved questions.
+  expected_output: >
+    A clean Markdown implementation brief containing: issue summary, proposed
+    solution, affected areas, implementation notes, test plan, key risks,
+    required revisions, and any open questions for human review.
+  agent: synthesizer
+  output_file: 'implementation_draft.md'
+
+revise_issue_task:
+  description: >
+    Revise the implementation draft for {issue} using the reviewer feedback.
+    Update the proposed solution, tests, and technical notes to address the
+    most important critiques where possible. Preserve any unresolved risks,
+    assumptions, or open questions if they cannot be fully resolved from the
+    available context.
+  expected_output: >
+    A revised implementation draft containing: updated solution summary,
+    revised code changes or pseudocode, updated test plan, addressed review
+    items, and a short list of any unresolved concerns that still require
+    human judgment.
+  agent: implementer
