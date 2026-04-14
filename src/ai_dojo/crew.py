@@ -2,7 +2,6 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 
-
 @CrewBase
 class AiDojo():
     """AiDojo crew — supports a research/report workflow and a planning workflow."""
@@ -217,7 +216,7 @@ class AiDojo():
                 self.implementation_drafting_task(),
                 self.draft_review_task(),
                 self.final_draft_synthesis_task(),
-                # self.revise_issue_task(),
+                self.revise_issue_task(),
             ],
             process=Process.sequential,
             verbose=True,

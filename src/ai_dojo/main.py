@@ -5,6 +5,7 @@ import warnings
 from datetime import datetime
 
 from ai_dojo.crew import AiDojo
+from ai_dojo.flows.implementation_flow import ImplementationFlow
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -41,7 +42,8 @@ def run():
             'current_year': str(datetime.now().year),
         }
         try:
-            AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
+            # AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
+            ImplementationFlow().kickoff(inputs=inputs)
         except Exception as e:
             raise Exception(f"An error occurred while running the implementation planner crew: {e}")
     elif len(sys.argv) > 1 and sys.argv[1] == 'planning':
