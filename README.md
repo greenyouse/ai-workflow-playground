@@ -42,7 +42,7 @@ run_crew research
 run_crew planning {idea}
 ```
 
-These commands will trigger the differ ai-dojo Crew workflows. They run agnts and assign them tasks to work on.
+These commands will trigger the differ ai-dojo Crew workflows. They run agents and assign them tasks to work on.
 
 See [these examples](./example_runs/README.md) for the workflows in action.
 
@@ -60,7 +60,7 @@ The general idea is to start with basic workflows, then augment them with progre
 - Lightweight Planning
 - Tracing
 - Evals
-- Persistance
+- Persistence
 - Templates + Approvals
 - Repo memories + Adaptive retrieval
 - Multi-agent workflows
