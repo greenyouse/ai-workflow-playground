@@ -8,7 +8,7 @@ It's just pairs custom agents with custom tasks.
 Try running this with:
 ```bash
 source .venv/bin/activate
-run_crew impelentation {issue}
+run_crew implementation {issue}
 ```
 
 Example project idea prompt I used:

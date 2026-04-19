@@ -8,7 +8,7 @@ If the critic doesn't approve of the output, the output can be revised up to 2 t
 Try running this with:
 ```bash
 source .venv/bin/activate
-run_crew impelentation {issue}
+run_crew implementation {issue}
 ```
 
 Example project idea prompt I used:

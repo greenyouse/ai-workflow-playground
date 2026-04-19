@@ -1,6 +1,6 @@
 from datetime import datetime
 from crewai.flow.flow import Flow, listen, router, start
-from ai_dojo.crew import AiDojo
+from ai_dojo.crews.implementation_planner.implementation_planner_crew import ImplementationPlannerCrew
 
 
 class ImplementationFlow(Flow):
@@ -10,7 +10,7 @@ class ImplementationFlow(Flow):
     def run_implementation(self):
         self.state["revisions"] = 0
         inputs = self._build_inputs()
-        result = AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
+        result = ImplementationPlannerCrew().implementation_planner_crew().kickoff(inputs=inputs)
         self.state["result"] = result
         return result
 
@@ -27,7 +27,7 @@ class ImplementationFlow(Flow):
         inputs["revision_round"] = str(self.state["revisions"])
         inputs["previous_result"] = getattr(self.state["result"], "raw", str(self.state["result"]))
 
-        result = AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
+        result = ImplementationPlannerCrew().implementation_planner_crew().kickoff(inputs=inputs)
         self.state["result"] = result
         return result
 

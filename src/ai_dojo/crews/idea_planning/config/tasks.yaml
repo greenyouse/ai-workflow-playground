@@ -1,0 +1,46 @@
+scoping_task:
+  description: >
+    Analyze the initial idea: {idea}. Define the likely problem statement,
+    propose a bounded MVP scope, identify assumptions and unknowns, and list
+    the technical areas that require further research before planning.
+  expected_output: >
+    A structured scoping brief containing: problem statement, proposed MVP
+    scope, non-goals, assumptions, open questions, and prioritized research
+    areas.
+  agent: planner
+
+context_gathering_task:
+  description: >
+    Using the scoping brief, gather relevant technical evidence, documentation,
+    prior art, and code or architecture context for the prioritized research
+    areas. Organize findings clearly and flag uncertainty where evidence is
+    incomplete.
+  expected_output: >
+    A structured research summary containing: evidence by topic, relevant docs
+    or references, technical constraints, implementation considerations, and
+    unresolved questions.
+  agent: planning_researcher
+
+quality_review_task:
+  description: >
+    Review the scoping brief and research summary together. Identify logic
+    flaws, unsupported assumptions, scope risks, missing decision criteria,
+    unresolved unknowns, and any weak or missing evidence. Suggest concrete
+    corrections where needed.
+  expected_output: >
+    A review report containing: critiques, major risks, unsupported
+    assumptions, missing information, and recommended corrections to improve
+    the final plan.
+  agent: reviewer
+
+finalization_task:
+  description: >
+    Synthesize the scoping brief, research summary, and review report into a
+    final Markdown project plan. Include: Problem Statement, MVP Scope,
+    Milestones, First 3 Tasks, Key Risks, and Open Questions. Preserve
+    important caveats and do not introduce unsupported claims.
+  expected_output: >
+    A clean Markdown project plan ready for project implementation, with major
+    uncertainties and risks clearly documented.
+  agent: synthesizer
+  output_file: 'project_plan.md'

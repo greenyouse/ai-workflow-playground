@@ -4,7 +4,8 @@ import warnings
 
 from datetime import datetime
 
-from ai_dojo.crew import AiDojo
+from ai_dojo.crews.research.research_crew import ResearchCrew
+from ai_dojo.crews.idea_planning.idea_planning_crew import IdeaPlanningCrew
 from ai_dojo.flows.implementation_flow import ImplementationFlow
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -42,7 +43,6 @@ def run():
             'current_year': str(datetime.now().year),
         }
         try:
-            # AiDojo().implementation_planner_crew().kickoff(inputs=inputs)
             ImplementationFlow().kickoff(inputs=inputs)
         except Exception as e:
             raise Exception(f"An error occurred while running the implementation planner crew: {e}")
@@ -58,7 +58,7 @@ def run():
             'current_year': str(datetime.now().year),
         }
         try:
-            AiDojo().planning_crew().kickoff(inputs=inputs)
+            IdeaPlanningCrew().planning_crew().kickoff(inputs=inputs)
         except Exception as e:
             raise Exception(f"An error occurred while running the planning crew: {e}")
     else:
@@ -67,7 +67,7 @@ def run():
             'current_year': str(datetime.now().year),
         }
         try:
-            AiDojo().crew().kickoff(inputs=inputs)
+            ResearchCrew().crew().kickoff(inputs=inputs)
         except Exception as e:
             raise Exception(f"An error occurred while running the crew: {e}")
 
@@ -81,7 +81,7 @@ def train():
         'current_year': str(datetime.now().year)
     }
     try:
-        AiDojo().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
+        ResearchCrew().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
 
     except Exception as e:
         raise Exception(f"An error occurred while training the crew: {e}")
@@ -91,7 +91,7 @@ def replay():
     Replay the crew execution from a specific task.
     """
     try:
-        AiDojo().crew().replay(task_id=sys.argv[1])
+        ResearchCrew().crew().replay(task_id=sys.argv[1])
 
     except Exception as e:
         raise Exception(f"An error occurred while replaying the crew: {e}")
@@ -106,7 +106,7 @@ def test():
     }
 
     try:
-        AiDojo().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
+        ResearchCrew().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
 
     except Exception as e:
         raise Exception(f"An error occurred while testing the crew: {e}")
@@ -129,7 +129,7 @@ def run_planning():
         'current_year': str(datetime.now().year),
     }
     try:
-        AiDojo().planning_crew().kickoff(inputs=inputs)
+        IdeaPlanningCrew().planning_crew().kickoff(inputs=inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the planning crew: {e}")
 
@@ -155,7 +155,7 @@ def run_with_trigger():
     }
 
     try:
-        result = AiDojo().crew().kickoff(inputs=inputs)
+        result = ResearchCrew().crew().kickoff(inputs=inputs)
         return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew with trigger: {e}")
