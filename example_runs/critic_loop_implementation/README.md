@@ -1,5 +1,4 @@
-
-# Basic Planning
+# Implementation with critic loop
 
 This is the same implementation workflow but with a critc loop added.
 

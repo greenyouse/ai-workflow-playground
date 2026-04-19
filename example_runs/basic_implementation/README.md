@@ -1,5 +1,4 @@
-
-# Basic Planning
+# Basic Implementation
 
 This is the first run through the implementation planner without an optimizations.
 
