@@ -33,6 +33,11 @@ class Flow:
     def __init__(self, *args, **kwargs):
         self.state = {}
 
+    def kickoff(self, inputs=None):
+        if inputs:
+            self.state.update(inputs)
+        return None
+
 crewai.Agent = Agent
 crewai.Crew = Crew
 crewai.Process = Process
@@ -69,6 +74,17 @@ class BaseAgent:
 
 base_agent.BaseAgent = BaseAgent
 sys.modules["crewai.agents.agent_builder.base_agent"] = base_agent
+
+# Minimal crewai_tools stub used by TDD crew imports
+crewai_tools = types.ModuleType("crewai_tools")
+
+class FileReadTool:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+crewai_tools.FileReadTool = FileReadTool
+sys.modules["crewai_tools"] = crewai_tools
 
 # Minimal flow module stubs used by implementation flow tests
 flow_package = types.ModuleType("crewai.flow")

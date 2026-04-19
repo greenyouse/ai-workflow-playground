@@ -7,6 +7,7 @@ from datetime import datetime
 from ai_dojo.crews.research.research_crew import ResearchCrew
 from ai_dojo.crews.idea_planning.idea_planning_crew import IdeaPlanningCrew
 from ai_dojo.flows.implementation_flow import ImplementationFlow
+from ai_dojo.flows.tdd_flow import TDDFlow
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -28,6 +29,9 @@ def run():
 
     Implementation planner mode:
         run_crew implementation <issue>   # issue can be multi-word; no quotes needed
+
+    TDD Implementation mode:
+        run_crew tdd <implementation_plan>
     """
     if len(sys.argv) > 1 and sys.argv[1] == 'implementation':
         if len(sys.argv) < 3:
@@ -47,20 +51,38 @@ def run():
         except Exception as e:
             raise Exception(f"An error occurred while running the implementation planner crew: {e}")
     elif len(sys.argv) > 1 and sys.argv[1] == 'planning':
-        if len(sys.argv) < 3:
+        if len(sys.argv) < 4:
             raise Exception(
-                "Planning mode requires an idea argument.\n"
-                "Usage: run_crew planning <idea>"
+                "Planning mode requires an idea and code path argument.\n"
+                "Usage: run_crew planning <code_path> <idea>"
             )
-        idea = ' '.join(sys.argv[2:])
+        idea = ' '.join(sys.argv[3:])
+        code_path = sys.argv[2]
         inputs = {
             'idea': idea,
-            'current_year': str(datetime.now().year),
+            "code_path": code_path
         }
         try:
             IdeaPlanningCrew().planning_crew().kickoff(inputs=inputs)
         except Exception as e:
             raise Exception(f"An error occurred while running the planning crew: {e}")
+    elif len(sys.argv) > 1 and sys.argv[1] == 'tdd':
+        print("args: ", sys.argv)
+        if len(sys.argv) < 4:
+            raise Exception(
+                "TDD Implementation mode requires a code path and implementation plan.\n"
+                "Usage: run_crew tdd <code_path> <implementation_plan>"
+            )
+        code_path = sys.argv[2]
+        implementation_plan = ' '.join(sys.argv[3:])
+        inputs = {
+            'implementation_plan': implementation_plan,
+            'code_path': code_path,
+        }
+        try:
+            TDDFlow().kickoff(inputs=inputs)
+        except Exception as e:
+            raise Exception(f"An error occurred while running the TDD implementation flow: {e}")
     else:
         inputs = {
             'topic': 'AI LLMs',

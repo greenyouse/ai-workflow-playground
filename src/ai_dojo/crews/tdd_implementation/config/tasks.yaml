@@ -1,0 +1,98 @@
+test_scoping_task:
+  description: >
+    Review the {implementation_plan}. Identify the critical behaviors, edge
+    cases, failure modes, and integration points that should be covered by the
+    initial TDD test suite. Prioritize the smallest set of tests that clearly
+    defines expected behavior.
+  expected_output: >
+    A structured test strategy containing: behaviors to validate, prioritized
+    test cases, suggested test level (unit/integration), key edge cases,
+    assumptions, and any open questions that could affect test design.
+  agent: tdd_planner
+
+repo_mapping_task:
+  description: >
+    Analyze the repository evidence already collected from {code_path}. Use the
+    provided file manifest in the collected files and the supplied file contents in
+    the supplied repo context to identify where new tests should live, which testing
+    framework and conventions are used, and which fixtures, helpers, mocks, or
+    existing test patterns should be reused. You must only reference files that
+    appear in the provided collected files list. Do not infer unseen files or
+    repository structure beyond the supplied evidence.
+
+    Here are the collected files:
+    {collected_files}
+
+    This is the repo context:
+    {repo_context}
+  expected_output: >
+    A structured repository test-context report containing: target test file
+    location, framework and style conventions, relevant fixtures or helpers,
+    similar existing tests to follow, any repository-specific constraints that
+    should shape the new test suite, and a files reviewed section listing the
+    supplied files that support the analysis.
+  agent: repo_analyst
+
+test_generation_task:
+  description: >
+    Using the test strategy and repository test-context report, generate the
+    initial failing test suite for the implementation plan. Follow repository
+    conventions for test structure, naming, fixtures, and style. Base the test
+    suite on the supplied repository evidence and make any necessary
+    assumptions explicit if implementation details are still unknown. Do not
+    invent helpers, fixtures, modules, or file locations that are absent from
+    the repository evidence.
+  expected_output: >
+    A draft failing test suite containing: target test file path, concrete test
+    code, brief notes on assumptions made, and a short code comment explaining why the
+    tests should fail before implementation exists. Do not output Markdown, prose 
+    summaries, or code fences. If assumptions are necessary, include them as short 
+    code comments in the file.
+  agent: test_engineer
+
+test_review_task:
+  description: >
+    Critically review the generated tests. Ensure they are idiomatic, aligned
+    with the implementation plan, consistent with repository conventions, and
+    unlikely to pass prematurely or fail for irrelevant reasons. Check for
+    brittle assertions, missing coverage, over-coupling to imagined
+    implementation details, and references to files or helpers that do not
+    appear in the supplied repository evidence.
+  expected_output: >
+    A review report containing: major critiques, coverage gaps, brittle or
+    misleading test patterns, convention mismatches, and required revisions or
+    approval of the draft suite.
+  agent: tdd_reviewer
+
+revision_review_task:
+  description: >
+    Review the revised failing test suite produced by the previous task.
+    Compare the revised draft against {review_feedback} and confirm whether the
+    earlier critiques were actually addressed. Focus on whether the tests still
+    fail for the right reasons, remain aligned with the implementation plan,
+    follow repository conventions, and avoid brittle or fabricated details.
+    Use {previous_test_suite} only as the prior draft for comparison. Do not ask
+    for the original plan again or introduce new requirements that were not part
+    of the prior review.
+  expected_output: >
+    A revision review report containing: a clear READY or NOT READY verdict,
+    the specific review items that were resolved, any remaining gaps or risks,
+    any brittle or misleading patterns still present, and a concise note on
+    whether the revised suite is acceptable for human use or needs another pass.
+  agent: tdd_reviewer
+
+test_revision_task:
+  description: >
+    Revise the generated test suite using the explicit prior-round artifacts.
+    Treat {previous_test_suite} as the last draft and {review_feedback} as the
+    feedback that must be addressed in this revision round. Update test
+    structure, assertions, fixtures, and assumptions to address the most
+    important critiques while preserving the intended TDD behavior. Continue to
+    rely only on the supplied repository evidence and do not introduce unseen
+    files, helpers, or fixtures.
+  expected_output: >
+    A revised failing test suite containing: updated test code, addressed review
+    items, and a short code comment on any unresolved assumptions or issues that still
+    need human judgment. Do not output Markdown, prose summaries, or code fences. If
+    assumptions are necessary, include them as short code comments in the file.
+  agent: test_engineer

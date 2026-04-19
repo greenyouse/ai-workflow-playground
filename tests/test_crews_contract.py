@@ -5,6 +5,7 @@ import yaml
 from ai_dojo.crews.idea_planning.idea_planning_crew import IdeaPlanningCrew
 from ai_dojo.crews.implementation_planner.implementation_planner_crew import ImplementationPlannerCrew
 from ai_dojo.crews.research.research_crew import ResearchCrew
+from ai_dojo.crews.tdd_implementation.tdd_implementation_crew import TddImplementationCrew
 from crewai import Agent, Crew, Process, Task
 
 
@@ -124,3 +125,41 @@ def test_implementation_planner_crew_contract(monkeypatch):
         expected_context_length=5,
         expected_output_file="implementation_draft.md",
     )
+
+
+def test_tdd_implementation_crew_contract(monkeypatch):
+    agents_config, tasks_config = _patch_configs(
+        monkeypatch,
+        TddImplementationCrew,
+        "tdd_implementation/config/agents.yaml",
+        "tdd_implementation/config/tasks.yaml",
+    )
+
+    assert set(agents_config) == {"tdd_planner", "repo_analyst", "test_engineer", "tdd_reviewer"}
+    assert set(tasks_config) == {
+        "test_scoping_task",
+        "repo_mapping_task",
+        "test_generation_task",
+        "test_review_task",
+        "test_revision_task",
+        "revision_review_task",
+    }
+
+    crew = TddImplementationCrew().tdd_implementation_crew()
+
+    _assert_crew_contract(crew, expected_agent_count=4, expected_task_count=4)
+    _assert_agent(TddImplementationCrew().tdd_planner())
+    _assert_agent(TddImplementationCrew().repo_analyst())
+    _assert_agent(TddImplementationCrew().test_engineer())
+    _assert_agent(TddImplementationCrew().tdd_reviewer())
+
+    _assert_task(TddImplementationCrew().test_scoping_task())
+    _assert_task(TddImplementationCrew().repo_mapping_task(), expected_context_length=1)
+    _assert_task(TddImplementationCrew().test_generation_task(), expected_context_length=2)
+    _assert_task(TddImplementationCrew().test_review_task(), expected_context_length=3)
+    _assert_task(
+        TddImplementationCrew().test_revision_task(),
+        expected_context_length=0,
+        expected_output_file="failing_tests_draft.py",
+    )
+    _assert_task(TddImplementationCrew().revised_test_review_task(), expected_context_length=1)
