@@ -28,28 +28,24 @@ def run():
         run_crew planning <idea>   # idea can be multi-word; no quotes needed
 
     Implementation planner mode:
-        run_crew implementation <issue>   # issue can be multi-word; no quotes needed
+        run_crew implementation <code_path> <issue>   # issue can be multi-word; no quotes needed
 
     TDD Implementation mode:
-        run_crew tdd <implementation_plan>
+        run_crew tdd <code_path> <implementation_plan>
     """
     if len(sys.argv) > 1 and sys.argv[1] == 'implementation':
-        if len(sys.argv) < 3:
+        if len(sys.argv) < 4:
             raise Exception(
-                "Implementation mode requires an issue argument.\n"
-                "Usage: run_crew implementation <issue>"
+                "Implementation mode requires a code path and an issue argument.\n"
+                "Usage: run_crew implementation <code_path> <issue>"
             )
-        issue = ' '.join(sys.argv[2:])
-        inputs = {
-            'issue': issue,
-            'idea': issue,
-            'topic': issue,
-            'current_year': str(datetime.now().year),
-        }
+        code_path = sys.argv[2]
+        issue = ' '.join(sys.argv[3:])
+        
         try:
-            ImplementationFlow().kickoff(inputs=inputs)
+            ImplementationFlow().kickoff(issue=issue, code_path=code_path)
         except Exception as e:
-            raise Exception(f"An error occurred while running the implementation planner crew: {e}")
+            raise Exception(f"An error occurred while running the implementation planner crew: {str(e)}")
     elif len(sys.argv) > 1 and sys.argv[1] == 'planning':
         if len(sys.argv) < 4:
             raise Exception(
@@ -65,7 +61,7 @@ def run():
         try:
             IdeaPlanningCrew().planning_crew().kickoff(inputs=inputs)
         except Exception as e:
-            raise Exception(f"An error occurred while running the planning crew: {e}")
+            raise Exception(f"An error occurred while running the planning crew: {str(e)}")
     elif len(sys.argv) > 1 and sys.argv[1] == 'tdd':
         print("args: ", sys.argv)
         if len(sys.argv) < 4:
@@ -82,7 +78,7 @@ def run():
         try:
             TDDFlow().kickoff(inputs=inputs)
         except Exception as e:
-            raise Exception(f"An error occurred while running the TDD implementation flow: {e}")
+            raise Exception(f"An error occurred while running the TDD implementation flow: {str(e)}")
     else:
         inputs = {
             'topic': 'AI LLMs',

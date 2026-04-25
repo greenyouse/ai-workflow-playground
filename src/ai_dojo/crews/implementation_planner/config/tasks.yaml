@@ -1,6 +1,6 @@
 issue_analysis_task:
   description: >
-    Analyze the following issue: {issue}. Classify it as a bug, feature
+    Analyze the following issue: {idea}. Classify it as a bug, feature
     request, or refactor. Identify the likely technical requirements,
     possible system impacts, unknowns, and the types of code or
     documentation context needed before implementation.
@@ -13,10 +13,18 @@ issue_analysis_task:
 
 context_retrieval_task:
   description: >
-    Based on the issue analysis and retrieval strategy, gather the technical
-    context needed to resolve the issue: {issue}. Retrieve relevant code
-    snippets, API signatures, documentation, dependency relationships, and
-    prior related implementation patterns when available.
+    Based on the issue analysis and the supplied collected repository context,
+    gather the technical context needed to resolve the issue: {idea}.
+
+    Use the collected files list:
+    {collected_files}
+
+    Use the collected repository context:
+    {repo_context}
+
+    Retrieve relevant code snippets, API signatures, documentation,
+    dependency relationships, and prior related implementation patterns
+    when available.
   expected_output: >
     A structured context packet containing: relevant files or modules, key
     code snippets, API signatures, dependency or impact notes, related docs
@@ -26,7 +34,7 @@ context_retrieval_task:
 implementation_drafting_task:
   description: >
     Using the issue analysis and structured technical context, propose a
-    practical solution for {issue}. Draft the implementation approach,
+    practical solution for {idea}. Draft the implementation approach,
     including proposed code changes, relevant tests, and migration or rollout
     notes only if they are necessary.
   expected_output: >
@@ -37,23 +45,38 @@ implementation_drafting_task:
 
 draft_review_task:
   description: >
-    Critically evaluate the draft implementation for {issue}. Check for logic
-    errors, missing edge cases, security concerns, architectural misalignment,
-    unsupported assumptions, and inadequate test coverage. Confirm that the
-    proposed implementation actually addresses the original issue without
-    unnecessary scope expansion.
+    Critically evaluate the following implementation draft for {idea}.
+
+    Draft implementation:
+    {implementation_plan}
+
+    Collected files:
+    {collected_files}
+
+    Repository context:
+    {repo_context}
+
+    Check for logic errors, missing edge cases, security concerns,
+    architectural misalignment, unsupported assumptions, and inadequate test
+    coverage. Confirm that the proposed implementation actually addresses the
+    original issue without unnecessary scope expansion.
   expected_output: >
-    A review report containing: major critiques, risks, missing coverage,
-    unsupported assumptions, and specific required revisions to improve the
-    implementation draft.
+    A review report containing: a clear approved: true or approved: false
+    verdict, major critiques, risks, missing coverage, unsupported assumptions,
+    and specific required revisions to improve the implementation draft.
   agent: reviewer
 
 final_draft_synthesis_task:
   description: >
     Consolidate the issue analysis, technical context, implementation draft,
     and review feedback into a final Markdown implementation brief for
-    {issue}. Present it in a form a human developer can act on immediately,
+    {idea}. Present it in a form a human developer can act on immediately,
     while preserving important caveats, assumptions, and unresolved questions.
+
+    References these details from earlier steps:
+    - Implementation draft: {implementation_plan}
+    - Review feedback: {review_feedback}
+
   expected_output: >
     A clean Markdown implementation brief containing: issue summary, proposed
     solution, affected areas, implementation notes, test plan, key risks,
@@ -63,7 +86,20 @@ final_draft_synthesis_task:
 
 revise_issue_task:
   description: >
-    Revise the implementation draft for {issue} using the reviewer feedback.
+    Revise the implementation draft for {idea} using the reviewer feedback.
+
+    Draft implementation:
+    {implementation_plan}
+
+    Reviewer feedback:
+    {review_feedback}
+
+    Collected files:
+    {collected_files}
+
+    Repository context:
+    {repo_context}
+
     Update the proposed solution, tests, and technical notes to address the
     most important critiques where possible. Preserve any unresolved risks,
     assumptions, or open questions if they cannot be fully resolved from the
