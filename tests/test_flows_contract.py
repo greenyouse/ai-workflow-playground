@@ -2,26 +2,90 @@ from pathlib import Path
 
 from ai_dojo.flows.implementation_flow import ImplementationFlow
 from ai_dojo.flows.tdd_flow import TDDFlow
+from ai_dojo.models import ReviewVerdict
 
 
-def test_implementation_flow_build_inputs_uses_expected_contract_keys():
+def test_implementation_flow_build_inputs_use_collected_context():
     flow = ImplementationFlow()
-    flow.state["issue"] = "Add contract testing for each crew factory"
-    flow.state["current_year"] = "2026"
+    flow.state.issue = "Add a review gate for implementation plans"
+    flow.state.code_path = "src/ai_dojo"
+    flow.state.repo_context_content = "repo context payload"
+    flow.state.collected_files = "/tmp/project/src/ai_dojo/main.py"
+    flow.state.draft_plan = "draft implementation plan"
+    flow.state.review_feedback = "approved: false"
 
-    assert flow._build_inputs() == {
-        "issue": "Add contract testing for each crew factory",
-        "idea": "Add contract testing for each crew factory",
-        "topic": "Add contract testing for each crew factory",
-        "current_year": "2026",
+    assert flow._build_planning_inputs() == {
+        "idea": "Add a review gate for implementation plans",
+        "issue": "Add a review gate for implementation plans",
+        "code_path": "src/ai_dojo",
+        "repo_context": "repo context payload",
+        "collected_files": "/tmp/project/src/ai_dojo/main.py",
+        "revision_round": "0",
+    }
+
+    assert flow._build_review_inputs("draft implementation plan") == {
+        "idea": "Add a review gate for implementation plans",
+        "issue": "Add a review gate for implementation plans",
+        "code_path": "src/ai_dojo",
+        "repo_context": "repo context payload",
+        "collected_files": "/tmp/project/src/ai_dojo/main.py",
+        "implementation_plan": "draft implementation plan",
+    }
+
+    assert flow._build_revision_inputs() == {
+        "idea": "Add a review gate for implementation plans",
+        "issue": "Add a review gate for implementation plans",
+        "code_path": "src/ai_dojo",
+        "repo_context": "repo context payload",
+        "collected_files": "/tmp/project/src/ai_dojo/main.py",
+        "implementation_plan": "draft implementation plan",
+        "review_feedback": "approved: false",
+        "revision_round": "0",
     }
 
 
-def test_implementation_flow_defaults_to_revision_limit_and_state_dict():
+def test_implementation_flow_defaults_to_revision_limit_and_state_model():
     flow = ImplementationFlow()
 
-    assert flow.max_revisions == 2
-    assert isinstance(flow.state, dict)
+    assert flow.max_revisions == 1
+    assert flow.state.issue == ""
+    assert flow.state.code_path == ""
+    assert flow.state.final_result == ""
+
+
+def test_implementation_flow_formats_structured_review_verdict():
+    flow = ImplementationFlow()
+    verdict = ReviewVerdict(
+        approved=False,
+        summary="Needs another pass",
+        major_issues=["Missing tests", "Unclear routing"],
+        required_revisions=["Add focused tests", "Route on structured verdict"],
+    )
+
+    assert flow._format_review_feedback(verdict) == (
+        "approved: false\n"
+        "summary: Needs another pass\n"
+        "major_issues:\n"
+        "- Missing tests\n"
+        "- Unclear routing\n"
+        "required_revisions:\n"
+        "- Add focused tests\n"
+        "- Route on structured verdict"
+    )
+
+
+def test_implementation_flow_extracts_structured_review_verdict():
+    flow = ImplementationFlow()
+    result = type(
+        "Result",
+        (),
+        {"pydantic": ReviewVerdict(approved=True, summary="Looks good")},
+    )()
+
+    verdict = flow._extract_review_verdict(result)
+
+    assert verdict.approved is True
+    assert verdict.summary == "Looks good"
 
 
 def test_tdd_flow_build_inputs_include_retrieval_payloads():

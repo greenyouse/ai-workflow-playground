@@ -72,14 +72,14 @@ class ImplementationFlow(Flow[ImplementationState]):
         self._validate_initial_state()
 
         try:
-            repo_ctx = self.context_collector.collect(self.state.code_path)
+            repo_ctx = self.context_collector.collect(self.state.code_path, self.state.issue)
             self.state.repo_context_content = repo_ctx.content
             self.state.is_context_truncated = repo_ctx.is_truncated
             self.state.collected_files = repo_ctx.file_list
         except Exception as e:
             self.state.last_error = f"Failed to collect repo context: {str(e)}"
             self.state.final_result = "Error: Could not read repository context."
-            raise ValueError(self.state.final_result)
+            raise ValueError(e)
 
         return self._build_planning_inputs()
 
@@ -132,7 +132,7 @@ class ImplementationFlow(Flow[ImplementationState]):
         except Exception as e:
             self.state.last_error = str(e)
             self.state.final_result = f"Error: {str(e)}"
-            raise ValueError(self.state.final_result)
+            raise ValueError(e)
 
     @router(run_planning)
     def run_after_planning(self, _implementation_plan: str):
@@ -147,22 +147,22 @@ class ImplementationFlow(Flow[ImplementationState]):
             review_result = self._get_review_crew().kickoff(
                 inputs=self._build_review_inputs(implementation_plan)
             )
-            review_text = self._result_to_text(review_result)
-            self.state.review_feedback = review_text
-            self.state.approved = self._is_approved(review_text)
-            return review_text
+            report_text = self._result_to_text(review_result)
+            self.state.review_feedback = report_text
+            self.state.approved = self._is_approved(review_result)
+            return self.state.approved
         except Exception as e:
             self.state.last_error = str(e)
             self.state.review_feedback = f"approved: false\nerror: {str(e)}"
             self.state.approved = False
-            raise ValueError(self.state.final_result)
+            raise ValueError(e)
 
     @router(run_review)
-    def route_after_review(self, review_result: str) -> str:
+    def route_after_review(self, is_approved: bool) -> str:
         """
         Route to approval or revision based on the review verdict.
         """
-        if self._is_approved(review_result):
+        if is_approved:
             return "approved"
         return "revise"
 
@@ -181,7 +181,7 @@ class ImplementationFlow(Flow[ImplementationState]):
         except Exception as e:
             self.state.last_error = str(e)
             self.state.final_result = f"Error: {str(e)}"
-            raise ValueError(self.state.final_result)
+            raise ValueError(e)
 
     @listen("revise")
     def revise_plan(self, _review_result: str):
@@ -200,7 +200,7 @@ class ImplementationFlow(Flow[ImplementationState]):
         except Exception as e:
             self.state.last_error = str(e)
             self.state.final_result = f"Error: {str(e)}"
-            raise ValueError(self.state.final_result)
+            raise ValueError(e)
 
     @router(revise_plan)
     def route_after_revised_plan(self, _revised_result: str):

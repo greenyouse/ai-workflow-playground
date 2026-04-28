@@ -1,6 +1,14 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
+from ai_dojo.models import ApprovalDecision, DraftReviewFeedback
+
+from crewai import Agent, LLM
+
+ollama_llm = LLM(
+    model="ollama/gemma4",
+    base_url="http://localhost:11434",
+)
 
 @CrewBase
 class ImplementationPlannerCrew:
@@ -11,13 +19,6 @@ class ImplementationPlannerCrew:
 
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
-
-    @agent
-    def researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['researcher'],
-            verbose=True,
-        )
 
     @agent
     def planner(self) -> Agent:
@@ -44,6 +45,7 @@ class ImplementationPlannerCrew:
     def reviewer(self) -> Agent:
         return Agent(
             config=self.agents_config['reviewer'],
+            llm=ollama_llm,
             verbose=True,
         )
 
@@ -54,17 +56,10 @@ class ImplementationPlannerCrew:
         )
 
     @task
-    def context_retrieval_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['context_retrieval_task'],
-            context=[self.issue_analysis_task()],
-        )
-
-    @task
     def implementation_drafting_task(self) -> Task:
         return Task(
             config=self.tasks_config['implementation_drafting_task'],
-            context=[self.issue_analysis_task(), self.context_retrieval_task()],
+            context=[self.issue_analysis_task()],
         )
 
     @task
@@ -74,10 +69,11 @@ class ImplementationPlannerCrew:
         )
 
     @task
-    def final_draft_synthesis_task(self) -> Task:
+    def draft_feedback_task(self) -> Task:
         return Task(
-            config=self.tasks_config['final_draft_synthesis_task'],
-            markdown=True,
+            config=self.tasks_config['draft_feedback_task'],
+            context=[self.draft_review_task()],
+            output_pydantic=DraftReviewFeedback
         )
 
     @task
@@ -86,17 +82,22 @@ class ImplementationPlannerCrew:
             config=self.tasks_config['revise_issue_task'],
         )
 
+    @task
+    def final_draft_synthesis_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['revise_issue_task'],
+        )
+
+
     def planning_crew(self) -> Crew:
         """Initial planning workflow: analyze -> retrieve -> draft."""
         return Crew(
             agents=[
                 self.planner(),
-                self.researcher(),
                 self.implementer(),
             ],
             tasks=[
                 self.issue_analysis_task(),
-                self.context_retrieval_task(),
                 self.implementation_drafting_task(),
             ],
             process=Process.sequential,

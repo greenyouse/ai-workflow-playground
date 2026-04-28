@@ -1,13 +1,3 @@
-researcher:
-  role: >
-    {idea} Senior Data Researcher
-  goal: >
-    Uncover cutting-edge developments in {idea}
-  backstory: >
-    You're a seasoned researcher with a knack for uncovering the latest
-    developments in {idea}. Known for your ability to find the most relevant
-    information and present it in a clear and concise manner.
-
 planner:
   role: >
     Project Strategy Lead

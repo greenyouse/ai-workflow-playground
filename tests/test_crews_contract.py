@@ -106,9 +106,13 @@ def test_implementation_planner_crew_contract(monkeypatch):
         "revise_issue_task",
     }
 
-    crew = ImplementationPlannerCrew().implementation_planner_crew()
+    planning_crew = ImplementationPlannerCrew().planning_crew()
+    review_crew = ImplementationPlannerCrew().review_crew()
+    revision_crew = ImplementationPlannerCrew().revision_crew()
 
-    _assert_crew_contract(crew, expected_agent_count=5, expected_task_count=6)
+    _assert_crew_contract(planning_crew, expected_agent_count=3, expected_task_count=3)
+    _assert_crew_contract(review_crew, expected_agent_count=1, expected_task_count=1)
+    _assert_crew_contract(revision_crew, expected_agent_count=1, expected_task_count=1)
     _assert_agent(ImplementationPlannerCrew().planner())
     _assert_agent(ImplementationPlannerCrew().researcher())
     _assert_agent(ImplementationPlannerCrew().implementer())
@@ -118,13 +122,9 @@ def test_implementation_planner_crew_contract(monkeypatch):
     _assert_task(ImplementationPlannerCrew().issue_analysis_task())
     _assert_task(ImplementationPlannerCrew().context_retrieval_task(), expected_context_length=1)
     _assert_task(ImplementationPlannerCrew().implementation_drafting_task(), expected_context_length=2)
-    _assert_task(ImplementationPlannerCrew().draft_review_task(), expected_context_length=3)
+    _assert_task(ImplementationPlannerCrew().draft_review_task())
     _assert_task(ImplementationPlannerCrew().final_draft_synthesis_task(), expected_context_length=4)
-    _assert_task(
-        ImplementationPlannerCrew().revise_issue_task(),
-        expected_context_length=5,
-        expected_output_file="implementation_draft.md",
-    )
+    _assert_task(ImplementationPlannerCrew().revise_issue_task(), expected_output_file="implementation_draft.md")
 
 
 def test_tdd_implementation_crew_contract(monkeypatch):

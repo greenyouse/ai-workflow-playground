@@ -1,9 +1,13 @@
 issue_analysis_task:
   description: >
-    Analyze the following issue: {idea}. Classify it as a bug, feature
-    request, or refactor. Identify the likely technical requirements,
-    possible system impacts, unknowns, and the types of code or
-    documentation context needed before implementation.
+    Analyze the following issue: 
+
+    {idea}
+    
+    Classify it as a bug, feature request, or refactor. Identify 
+    the likely technical requirements, possible system impacts, 
+    unknowns, and the types of code or documentation context needed 
+    before implementation.
   expected_output: >
     A structured issue analysis containing: issue type, problem summary,
     likely requirements, impacted areas, possible side effects, open
@@ -11,32 +15,21 @@ issue_analysis_task:
     documentation context.
   agent: planner
 
-context_retrieval_task:
-  description: >
-    Based on the issue analysis and the supplied collected repository context,
-    gather the technical context needed to resolve the issue: {idea}.
-
-    Use the collected files list:
-    {collected_files}
-
-    Use the collected repository context:
-    {repo_context}
-
-    Retrieve relevant code snippets, API signatures, documentation,
-    dependency relationships, and prior related implementation patterns
-    when available.
-  expected_output: >
-    A structured context packet containing: relevant files or modules, key
-    code snippets, API signatures, dependency or impact notes, related docs
-    or prior art, and unresolved context gaps.
-  agent: researcher
-
 implementation_drafting_task:
   description: >
     Using the issue analysis and structured technical context, propose a
-    practical solution for {idea}. Draft the implementation approach,
-    including proposed code changes, relevant tests, and migration or rollout
-    notes only if they are necessary.
+    practical solution for the given idea:
+    {idea}
+
+    Draft the implementation approach, including proposed code changes, 
+    relevant tests, and migration or rollout notes only if they are necessary.
+
+    Here is the repo context:
+    {repo_context}
+
+    Local files referenced
+    {collected_files}
+
   expected_output: >
     A draft implementation package containing: solution summary, proposed code
     changes or pseudocode, test plan and sample test cases, assumptions,
@@ -47,6 +40,11 @@ draft_review_task:
   description: >
     Critically evaluate the following implementation draft for {idea}.
 
+    Check for logic errors, missing edge cases, security concerns,
+    architectural misalignment, unsupported assumptions, and inadequate test
+    coverage. Confirm that the proposed implementation actually addresses the
+    original issue without unnecessary scope expansion.
+
     Draft implementation:
     {implementation_plan}
 
@@ -55,15 +53,9 @@ draft_review_task:
 
     Repository context:
     {repo_context}
-
-    Check for logic errors, missing edge cases, security concerns,
-    architectural misalignment, unsupported assumptions, and inadequate test
-    coverage. Confirm that the proposed implementation actually addresses the
-    original issue without unnecessary scope expansion.
   expected_output: >
-    A review report containing: a clear approved: true or approved: false
-    verdict, major critiques, risks, missing coverage, unsupported assumptions,
-    and specific required revisions to improve the implementation draft.
+    Output a clear "approved: true" or "approved: false" for whether
+    the implementation passed the review.
   agent: reviewer
 
 final_draft_synthesis_task:
@@ -86,24 +78,39 @@ final_draft_synthesis_task:
 
 revise_issue_task:
   description: >
-    Revise the implementation draft for {idea} using the reviewer feedback.
+    Revise the implementation draft for this given idea using the reviewer 
+    feedback.
 
-    Draft implementation:
-    {implementation_plan}
-
-    Reviewer feedback:
-    {review_feedback}
-
-    Collected files:
-    {collected_files}
-
-    Repository context:
-    {repo_context}
+    Here is the idea:
+    {idea}
 
     Update the proposed solution, tests, and technical notes to address the
     most important critiques where possible. Preserve any unresolved risks,
     assumptions, or open questions if they cannot be fully resolved from the
     available context.
+
+    Use this repository context to gather the technical context needed to
+    resolve the issue. Ground all findings in the repository context, do not
+    invent any missing context.
+
+    Retrieve relevant code snippets, API signatures, documentation,
+    dependency relationships, and prior related implementation patterns
+    when available.
+
+    The next sections will give metadata to help with the analysis. Each section
+    is prefixed with "Here is the", for example "Here is the repo context".
+
+    Here is the draft implementation:
+    {implementation_plan}
+
+    Here is the draft feedback:
+    {review_feedback}
+
+    Here is the repo context:
+    {repo_context}
+
+    Here is the repo context file collection:
+    {collected_files}
   expected_output: >
     A revised implementation draft containing: updated solution summary,
     revised code changes or pseudocode, updated test plan, addressed review
