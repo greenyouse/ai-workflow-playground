@@ -18,6 +18,7 @@ from typing import TypedDict
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
+from ai_dojo.utils.repo_context_collector import RepoContextCollector
 
 
 class IdeaPlanningState(TypedDict, total=False):
@@ -28,6 +29,9 @@ class IdeaPlanningState(TypedDict, total=False):
     review_report: str
     project_plan: str
     project_plan_path: str
+    repo_context: str = ""
+    is_context_truncated: bool = False
+    collected_files: str = ""
 
 
 def _llm():
@@ -76,57 +80,26 @@ def context_gathering_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for planning_researcher + context_gathering_task."""
     idea = state["idea"]
     code_path = state.get("code_path", "")
-    scoping_brief = state["scoping_brief"]
 
-    prompt = f"""
-You are a Context & Evidence Collector.
+    if not code_path:
+        return {
+            "repo_context": "No repository context provided.",
+            "collected_files": "",
+            "is_context_truncated": False,
+        }
 
-Goal:
-Gather relevant evidence, documentation, prior art, and technical context
-related to the idea without making unsupported recommendations.
-
-Backstory:
-You specialize in retrieval and context gathering. You collect useful facts,
-code references, documentation, and constraints so other agents can reason
-from evidence instead of assumption.
-
-Idea:
-{idea}
-
-Code path, if relevant:
-{code_path}
-
-Scoping brief:
-{scoping_brief}
-
-Task:
-Using the scoping brief, gather relevant technical evidence, documentation,
-prior art, and code or architecture context for the prioritized research areas.
-Organize findings clearly and flag uncertainty where evidence is incomplete.
-
-Expected output:
-A structured research summary containing:
-- evidence by topic
-- relevant docs or references
-- technical constraints
-- implementation considerations
-- unresolved questions
-
-Important:
-Do not claim you inspected files unless specific file contents are provided.
-If repository context is missing, explicitly say so.
-""".strip()
-
-    messages = [{"role": "user", "content": prompt}]
-    response = _llm().invoke({"messages": messages})
-    last_message = response["messages"][-1]
-    return {"research_summary": last_message.content}
-
+    repo_ctx = RepoContextCollector().collect(code_path, issue=idea)
+    return {
+        "repo_context": repo_ctx.content,
+        "collected_files": repo_ctx.file_list,
+        "is_context_truncated": repo_ctx.is_truncated,
+    }
 
 def quality_review_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for reviewer + quality_review_task."""
     scoping_brief = state["scoping_brief"]
-    research_summary = state["research_summary"]
+    collected_files = state["collected_files"]
+    repo_context = state["repo_context"]
 
     prompt = f"""
 You are a Technical Quality Critic.
@@ -143,8 +116,11 @@ reasoning, and you suggest concrete corrections.
 Scoping brief:
 {scoping_brief}
 
-Research summary:
-{research_summary}
+Collected files:
+{collected_files}
+
+Repository context:
+{repo_context}
 
 Task:
 Review the scoping brief and research summary together. Identify logic flaws,
@@ -171,7 +147,6 @@ def finalization_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for synthesizer + finalization_task."""
     idea = state["idea"]
     scoping_brief = state["scoping_brief"]
-    research_summary = state["research_summary"]
     review_report = state["review_report"]
 
     prompt = f"""
@@ -191,9 +166,6 @@ Idea:
 
 Scoping brief:
 {scoping_brief}
-
-Research summary:
-{research_summary}
 
 Review report:
 {review_report}
