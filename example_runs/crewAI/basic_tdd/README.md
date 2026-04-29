@@ -15,7 +15,7 @@ run_crew tdd {relevant_code} {implementation_plan}
 Example command I used:
 
 ```text
-run_crew tdd ./src/ai_dojo "$(cat example_runs/critic_loop_implementation/implementation_draft.md)"
+run_crew tdd ./src/ai_dojo "$(cat example_runs/crewAI/critic_loop_implementation/implementation_draft.md)"
 ```
 
 Check out the [results here](./failing_tests_draft.py).
