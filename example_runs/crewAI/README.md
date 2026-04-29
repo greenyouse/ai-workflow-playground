@@ -1,7 +1,7 @@
-# Example Runs
-These are some example runs of the workflows.
+# crewAI Example Runs
+These are some example runs of crewAI workflows runs.
 
-Click into each to see example input and ouptput from the workflows.
+Click into each to see example input and output from the workflows.
 
 - [basic_planning](./basic_planning/README.md)
 - [basic implementation](./basic_implementation/README.md)
