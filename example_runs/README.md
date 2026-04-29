@@ -1,9 +1,8 @@
 # Example Runs
 These are some example runs of the workflows.
 
-Click into each to see example input and ouptput from the workflows.
+There are newer LangGraph workflows here:
+- [LangGraph examples](./LangGraph/README.md)
 
-- [basic_planning](./basic_planning/README.md)
-- [basic implementation](./basic_implementation/README.md)
-- [implementation w/ critic loop](./critic_loop_implementation/README.md)
-- [basic_tdd](./basic_tdd/README.md)
+Some older crewAI examples from initial testing are here:
+- [crewAI examples](./crewAI/README.md)

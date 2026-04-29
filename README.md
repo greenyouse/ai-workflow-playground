@@ -1,13 +1,11 @@
 # AiDojo Crew
 
-Hey this is just a personal project for playing around with workflow systems. It uses [crewAI](https://crewai.com) right now but the framework isn't important.
+Hey this is just a personal project for playing around with workflow systems. It uses [crewAI](https://crewai.com) and [LangGraph](https://www.langchain.com/langgraph) right now but the framework isn't important.
 
 It'll have a a few general software helper workflows that help augment software engineers doing work.
-It's mostly for me to practicing building AI workflow systems though.
+It's mostly for me to practice building AI workflow systems though.
 
-Workflows so far:
-- default crewAI research workflow (boilerplate, will delete)
-- planning for project planning
+LangGraph is what I'm going to use going forward. There are some graphs (workflows) that you can try now. Go through the install docs, then run `graph` to see what's available.
 
 ## Disclaimer
 I set this to run against a local [Gemma4](https://deepmind.google/models/gemma/) model via [Ollama](https://ollama.com/).
@@ -38,19 +36,15 @@ Here's how to run the two workflows so far:
 
 ```bash
 source .venv/bin/activate
-run_crew research
-run_crew planning {idea}
+graph # displays a help menu with all the workflows available
+# a couple example workflows
+graph research
+graph idea-planning --code-path {path} --idea {idea}
 ```
 
 These commands will trigger the differ ai-dojo Crew workflows. They run agents and assign them tasks to work on.
 
 See [these examples](./example_runs/README.md) for the workflows in action.
-
-### Project structure
-- Modify `src/ai_dojo/config/agents.yaml` to define your agents
-- Modify `src/ai_dojo/config/tasks.yaml` to define your tasks
-- Modify `src/ai_dojo/crew.py` to add your own logic, tools and specific args
-- Modify `src/ai_dojo/main.py` to add custom inputs for your agents and tasks
 
 ## Roadmap
 The general idea is to start with basic workflows, then augment them with progressively more powerful features:
