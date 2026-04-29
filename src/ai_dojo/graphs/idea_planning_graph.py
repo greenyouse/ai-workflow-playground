@@ -29,9 +29,9 @@ class IdeaPlanningState(TypedDict, total=False):
     review_report: str
     project_plan: str
     project_plan_path: str
-    repo_context: str = ""
-    is_context_truncated: bool = False
-    collected_files: str = ""
+    repo_context: str
+    is_context_truncated: bool
+    collected_files: str
 
 
 def _llm():
@@ -248,8 +248,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     final_state = run(
-        idea=args.topic,
-        code_path=args.idea,
+        idea=args.idea,
+        code_path=args.code_path,
         project_plan_path=args.output,
     )
 

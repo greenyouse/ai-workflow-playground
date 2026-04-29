@@ -556,7 +556,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--code-path")
     parser.add_argument("--issue")
-    parser.add_argument("--max-revisions")
+    parser.add_argument("--max-revisions", type=int, default=3)
     parser.add_argument("--output", default="failing_tests_draft.py")
     args = parser.parse_args()
 

@@ -91,6 +91,10 @@ def collect_context_node(state: ImplementationState) -> ImplementationState:
         "approved": False,
     }
 
+def route_after_collect_context(state: ImplementationState) -> str:
+    if state.get("last_error"):
+        return "write_error"
+    return "issue_analysis"
 
 def issue_analysis_node(state: ImplementationState) -> ImplementationState:
     """Replacement for planner + issue_analysis_task."""
@@ -398,9 +402,10 @@ def write_implementation_draft_node(
 ) -> ImplementationState:
     """Replacement for output_file='implementation_draft.md'."""
     path = state.get("implementation_draft_path", "implementation_draft.md")
+    content = state.get("final_result", "Error: No final result was produced.")
 
     with open(path, "w", encoding="utf-8") as file:
-        file.write(state["final_result"])
+        file.write(content)
 
     return {"implementation_draft_path": path}
 
@@ -418,6 +423,16 @@ def build_implementation_graph():
 
     graph.add_edge(START, "collect_context")
     graph.add_edge("collect_context", "issue_analysis")
+
+    graph.add_conditional_edges(
+        "collect_context",
+        route_after_collect_context,
+        {
+         "issue_analysis": "issue_analysis",
+        "write_error": "write_implementation_draft",
+        },
+    )
+
     graph.add_edge("issue_analysis", "implementation_drafting")
     graph.add_edge("implementation_drafting", "review")
 
@@ -460,13 +475,13 @@ if __name__ == "__main__":
     )
     parser.add_argument("--code-path")
     parser.add_argument("--issue")
-    parser.add_argument("--max-revisions")
+    parser.add_argument("--max-revisions", type=int, max=3)
     parser.add_argument("--output", default="implementation_draft.md")
     args = parser.parse_args()
 
     final_state = run(
         issue=args.issue,
-        code_path=args.code_path_arg,
+        code_path=args.code_path,
         max_revisions=args.max_revisions,
         output=args.output,
     )

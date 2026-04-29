@@ -5,7 +5,7 @@ Hey this is just a personal project for playing around with workflow systems. It
 It'll have a a few general software helper workflows that help augment software engineers doing work.
 It's mostly for me to practice building AI workflow systems though.
 
-LanGraph is what I'm going to use going forward. There are some graphs (workflows) that you can try now. Go through the install docs, then run `graph` to see what's available.
+LangGraph is what I'm going to use going forward. There are some graphs (workflows) that you can try now. Go through the install docs, then run `graph` to see what's available.
 
 ## Disclaimer
 I set this to run against a local [Gemma4](https://deepmind.google/models/gemma/) model via [Ollama](https://ollama.com/).
