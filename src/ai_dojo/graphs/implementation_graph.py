@@ -17,6 +17,7 @@ LangGraph shape:
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from typing import TypedDict
@@ -454,18 +455,20 @@ def run(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        raise SystemExit(
-            "Usage: python -m ai_dojo.graphs.implementation_graph "
-            "<code_path> <issue>"
-        )
-
-    code_path_arg = sys.argv[1]
-    issue_arg = " ".join(sys.argv[2:])
+    parser = argparse.ArgumentParser(
+        prog="python -m ai_dojo.graphs.implementation_graph"
+    )
+    parser.add_argument("--code-path")
+    parser.add_argument("--issue")
+    parser.add_argument("--max-revisions")
+    parser.add_argument("--output", default="implementation_draft.md")
+    args = parser.parse_args()
 
     final_state = run(
-        issue=issue_arg,
-        code_path=code_path_arg,
+        issue=args.issue,
+        code_path=args.code_path_arg,
+        max_revisions=args.max_revisions,
+        output=args.output,
     )
 
     print(f"Wrote {final_state['implementation_draft_path']}")

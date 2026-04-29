@@ -26,6 +26,7 @@ LangGraph shape:
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -550,18 +551,20 @@ def run(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        raise SystemExit(
-            "Usage: python -m ai_dojo.graphs.tdd_graph "
-            "<code_path> <implementation_plan>"
-        )
-
-    code_path_arg = sys.argv[1]
-    implementation_plan_arg = " ".join(sys.argv[2:])
+    parser = argparse.ArgumentParser(
+        prog="python -m ai_dojo.graphs.tdd_graph"
+    )
+    parser.add_argument("--code-path")
+    parser.add_argument("--issue")
+    parser.add_argument("--max-revisions")
+    parser.add_argument("--output", default="failing_tests_draft.py")
+    args = parser.parse_args()
 
     final_state = run(
-        implementation_plan=implementation_plan_arg,
-        code_path=code_path_arg,
+        implementation_plan=args.issue,
+        code_path=args.code_path,
+        max_revisions=args.max_revisions,
+        failing_tests_path=args.output,
     )
 
     print(f"Wrote {final_state['failing_tests_path']}")

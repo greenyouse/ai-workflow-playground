@@ -7,7 +7,7 @@ The results still aren't great but at least it's not hallucinating content as mu
 Try running this with:
 ```bash
 source .venv/bin/activate
-python -m ai_dojo.graphs.idea_planning_graph ./src "$(cat example_runs/crewAI/critic_loop_implementation/implementation_draft.md)"
+graph idea-planning --code-path ./src --idea "$(cat example_runs/crewAI/critic_loop_implementation/implementation_draft.md)"
 ```
 
 Check the [project_plan.md](./project_plan.md) output for an example of what was generated.

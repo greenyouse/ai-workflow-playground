@@ -4,11 +4,10 @@ version = "0.1.0"
 description = "ai-dojo using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
-dependencies = [
-    "crewai[tools]==1.14.1"
-]
+dependencies = ["crewai[tools]==1.14.1"]
 
 [project.scripts]
+graph = "ai_dojo.cli:main"
 ai_dojo = "ai_dojo.main:run"
 run_crew = "ai_dojo.main:run"
 train = "ai_dojo.main:train"
@@ -23,3 +22,6 @@ build-backend = "hatchling.build"
 
 [tool.crewai]
 type = "crew"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_dojo"]

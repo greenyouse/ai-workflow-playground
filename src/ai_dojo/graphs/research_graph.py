@@ -12,7 +12,7 @@ Run example:
 
 from __future__ import annotations
 
-import sys
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
@@ -27,6 +27,7 @@ class ResearchState(TypedDict, total=False):
     research_bullets: str
     report: str
     report_path: str
+    output_file: str
 
 
 def _llm():
@@ -126,6 +127,12 @@ def run(topic: str = "AI LLMs", report_path: str = "report.md") -> ResearchState
     )
 
 if __name__ == "__main__":
-    topic_arg = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "AI LLMs"
-    final_state = run(topic=topic_arg)
+    parser = argparse.ArgumentParser(
+        prog="python -m ai_dojo.graphs.research_graph"
+    )
+    parser.add_argument("--topic", default="AI LLMs")
+    parser.add_argument("--output", default="report.md")
+    args = parser.parse_args()
+
+    final_state = run(topic=args.topic, report_path=args.output)
     print(f"Wrote {final_state['report_path']}")

@@ -5,7 +5,7 @@ This is the first run through the LangGraph research workflow without any optimi
 Try running this with:
 ```bash
 source .venv/bin/activate
-python -m ai_dojo.graphs.research_graph "AI LLMs"
+graph research
 ```
 
 See the example output [here](./report.md).

@@ -12,7 +12,7 @@ Run example:
 
 from __future__ import annotations
 
-import sys
+import argparse
 from pathlib import Path
 from typing import TypedDict
 
@@ -239,18 +239,18 @@ def run(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        raise SystemExit(
-            "Usage: python -m ai_dojo.graphs.idea_planning_graph "
-            "<code_path> <idea>"
-        )
-
-    code_path_arg = sys.argv[1]
-    idea_arg = " ".join(sys.argv[2:])
+    parser = argparse.ArgumentParser(
+        prog="python -m ai_dojo.graphs.idea_planning_graph"
+    )
+    parser.add_argument("--code-path")
+    parser.add_argument("--idea")
+    parser.add_argument("--output", default="project_plan.md")
+    args = parser.parse_args()
 
     final_state = run(
-        idea=idea_arg,
-        code_path=code_path_arg,
+        idea=args.topic,
+        code_path=args.idea,
+        project_plan_path=args.output,
     )
 
     print(f"Wrote {final_state['project_plan_path']}")
