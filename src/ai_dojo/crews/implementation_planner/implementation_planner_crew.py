@@ -1,14 +1,7 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from ai_dojo.models import ApprovalDecision, DraftReviewFeedback
-
 from crewai import Agent, LLM
-
-ollama_llm = LLM(
-    model="ollama/gemma4",
-    base_url="http://localhost:11434",
-)
 
 @CrewBase
 class ImplementationPlannerCrew:
@@ -45,7 +38,6 @@ class ImplementationPlannerCrew:
     def reviewer(self) -> Agent:
         return Agent(
             config=self.agents_config['reviewer'],
-            llm=ollama_llm,
             verbose=True,
         )
 
@@ -73,7 +65,6 @@ class ImplementationPlannerCrew:
         return Task(
             config=self.tasks_config['draft_feedback_task'],
             context=[self.draft_review_task()],
-            output_pydantic=DraftReviewFeedback
         )
 
     @task
@@ -85,7 +76,7 @@ class ImplementationPlannerCrew:
     @task
     def final_draft_synthesis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['revise_issue_task'],
+            config=self.tasks_config['final_draft_synthesis_task'],
         )
 
 
