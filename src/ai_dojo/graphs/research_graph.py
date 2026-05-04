@@ -15,30 +15,46 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 from pathlib import Path
+from pydantic import BaseModel, field_validator
 from typing import TypedDict
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
 
-
-class ResearchState(TypedDict, total=False):
+class ResearchState(BaseModel):
     topic: str
-    current_year: str
-    research_bullets: str
-    report: str
-    report_path: str
-    output_file: str
+    current_year: str = str(datetime.now().year)
+    research_bullets: list[str] = []
+    report: str = ""
+    report_path: Path | str = "report.md"
+    output_file: str | None = None
 
+    @field_validator("research_bullets", mode="before")
+    @classmethod
+    def parse_bullets(cls, v: str) -> list[str]:
+        # Splitting by newline and stripping common bullet characters
+        bullets = [line.strip("-•* \t") for line in v.splitlines() if line.strip()]
+        # High-level validation: Ensure we actually got content
+        if not bullets:
+            raise ValueError("Researcher returned an empty list of bullets")
+        return bullets
+
+    @field_validator("report")
+    @classmethod
+    def validate_report(cls, v: str) -> str:
+        if len(v) < 100:
+            raise ValueError("Generated report is too short to be valid.")
+        return v
 
 def _llm():
     return create_agent(
     model="ollama:gemma4",
     )
 
-def research_node(state: ResearchState) -> ResearchState:
-    """Replacement for CrewAI researcher + research_task."""
-    topic = state["topic"]
-    current_year = state.get("current_year", str(datetime.now().year))
+def research_node(state: ResearchState) -> dict:
+    """Researches a topic and returns a bulleted list of information on the topic."""
+    topic = state.topic
+    current_year = state.current_year
 
     prompt = f"""
 You are a {topic} Senior Data Researcher.
@@ -59,13 +75,13 @@ about {topic}.
     messages = [{"role": "user", "content": prompt}]
     response = _llm().invoke({"messages": messages})
     last_message = response["messages"][-1]
+    
     return {"research_bullets": last_message.content}
 
 
-def reporting_node(state: ResearchState) -> ResearchState:
-    """Replacement for CrewAI reporting_analyst + reporting_task."""
-    topic = state["topic"]
-    research_bullets = state["research_bullets"]
+def reporting_node(state: ResearchState) -> dict:
+    topic = state.topic
+    research_bullets = state.research_bullets
 
     prompt = f"""
 You are a {topic} Reporting Analyst.
@@ -90,14 +106,12 @@ section of information. Format as markdown without code fences.
     messages = [{"role": "user", "content": prompt}]
     response = _llm().invoke({"messages": messages})
     last_message = response["messages"][-1]
+    
     return {"report": last_message.content}
 
-
-
-def write_report_node(state: ResearchState) -> ResearchState:
-    """Explicit replacement for CrewAI Task(output_file='report.md')."""
-    report_path = Path(state.get("report_path", "report.md"))
-    report_path.write_text(state["report"], encoding="utf-8")
+def write_report_node(state: ResearchState) -> dict:
+    report_path = Path(state.report_path)
+    report_path.write_text(state.report, encoding="utf-8")
     return {"report_path": str(report_path)}
 
 
@@ -135,4 +149,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     final_state = run(topic=args.topic, report_path=args.output)
-    print(f"Wrote {final_state['report_path']}")
+    print(f"Wrote {final_state.report_path}")
