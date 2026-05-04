@@ -1,13 +1,12 @@
-"""LangGraph migration of ai_dojo.crews.research.
+"""
+Researches a topic with LLM knowledge (no external search) and
+returns a report of what the LLM knows about the subject.
 
-CrewAI version:
-    researcher -> research_task -> reporting_analyst -> reporting_task -> report.md
-
-LangGraph version:
+graph structure:
     research node -> reporting node -> write_report node
 
 Run example:
-    python -m ai_dojo.graphs.research_graph "AI LLMs"
+    graph research "AI LLMs"
 """
 
 from __future__ import annotations
