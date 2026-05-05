@@ -1,12 +1,6 @@
 """
 Researches a topic with LLM knowledge (no external search) and
 returns a report of what the LLM knows about the subject.
-
-graph structure:
-    research node -> reporting node -> write_report node
-
-Run example:
-    graph research "AI LLMs"
 """
 
 from __future__ import annotations
@@ -15,7 +9,6 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, field_validator
-from typing import TypedDict
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
