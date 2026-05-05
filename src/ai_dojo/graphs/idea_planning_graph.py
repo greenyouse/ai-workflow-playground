@@ -16,14 +16,14 @@ from ai_dojo.utils.repo_context_collector import RepoContextCollector
 class IdeaPlanningState(BaseModel):
     idea: str
     code_path: str = ""
-    scoping_brief: str
-    research_summary: str
-    review_report: str
-    project_plan: str
-    project_plan_path: str
-    repo_context: str
-    is_context_truncated: bool
-    collected_files: str
+    scoping_brief: str = ""
+    research_summary: str = ""
+    review_report: str = ""
+    project_plan: str = ""
+    project_plan_path: str = "project_plan.md"
+    repo_context: str = ""
+    is_context_truncated: bool = False
+    collected_files: str = ""
 
 
 def _llm():
@@ -191,7 +191,7 @@ fences.
 
 def write_project_plan_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Explicit replacement for CrewAI Task(output_file='project_plan.md')."""
-    project_plan_path = Path(state.get("project_plan_path", "project_plan.md"))
+    project_plan_path = Path(state.project_plan_path)
     project_plan_path.write_text(state.project_plan, encoding="utf-8")
     return {"project_plan_path": str(project_plan_path)}
 
