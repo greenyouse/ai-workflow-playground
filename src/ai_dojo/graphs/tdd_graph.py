@@ -1,36 +1,14 @@
-"""LangGraph migration of ai_dojo.flows.tdd_flow.
-
-CrewAI flow shape:
-    collect_repo_context
-        -> tdd_implementation_crew
-            -> test_scoping_task
-            -> repo_mapping_task
-            -> test_generation_task
-            -> test_review_task
-        -> approved? done : tdd_revision_crew
-            -> test_revision_task
-            -> revised_test_review_task
-        -> done
-
-LangGraph shape:
-    collect_repo_context
-        -> test_scoping
-        -> repo_mapping
-        -> test_generation
-        -> test_review
-        -> conditional: done or revise
-        -> revision_review
-        -> conditional: done or revise again
-        -> write_failing_tests
+"""
+Takes an implementation plan and turns that into failing tests
+for TDD style development.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
-import sys
 from pathlib import Path
-from typing import TypedDict
+from pydantic import BaseModel
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
@@ -38,13 +16,15 @@ from langgraph.graph import END, START, StateGraph
 from ai_dojo.utils.repo_context_collector import RepoContextCollector
 
 
-class TDDState(TypedDict, total=False):
+class TDDState(BaseModel):
     implementation_plan: str
-    code_path: str
+    code_path: str = ""
 
     resolved_code_path: str
     repo_context: str
     collected_files: str
+    max_file_chars: int = 20000
+    max_repo_context_chars: int = 120000
 
     test_strategy: str
     repo_mapping: str
@@ -55,13 +35,13 @@ class TDDState(TypedDict, total=False):
     revised_test_suite: str
     revision_review: str
 
-    revisions: int
-    max_revisions: int
+    revisions: int = 0
+    max_revisions: int = 1
 
-    approved: bool
+    approved: bool = False
     final_test_suite: str
     final_review: str
-    failing_tests_path: str
+    failing_tests_path: str = "failing_tests_draft.py"
     last_error: str
 
 
@@ -90,14 +70,14 @@ def _is_approved(text: str) -> bool:
 
 def collect_repo_context_node(state: TDDState) -> TDDState:
     """Replacement for TDDFlow.collect_repo_context."""
-    code_path = state.get("code_path", "")
+    code_path = state.code_path
 
     if not code_path:
         raise ValueError("State 'code_path' must be provided.")
 
     collector = RepoContextCollector(
-        max_file_chars=state.get("max_file_chars", 20000),
-        max_repo_context_chars=state.get("max_repo_context_chars", 120000),
+        max_file_chars=state.max_file_chars,
+        max_repo_context_chars=state.max_repo_context_chars
     )
 
     resolved_code_path = collector.resolve_code_path(code_path)
@@ -107,8 +87,8 @@ def collect_repo_context_node(state: TDDState) -> TDDState:
         "resolved_code_path": str(resolved_code_path),
         "collected_files": collected_files,
         "repo_context": repo_context,
-        "revisions": state.get("revisions", 0),
-        "max_revisions": state.get("max_revisions", 1),
+        "revisions": state.revisions,
+        "max_revisions": state.max_revisions,
         "approved": False,
     }
 
@@ -348,10 +328,10 @@ Then include:
 
 def route_after_review(state: TDDState) -> str:
     """Replacement for TDDFlow.route_after_initial / route_after_revision."""
-    if state.get("approved", False):
+    if state.approved:
         return "done"
 
-    if state.get("revisions", 0) < state.get("max_revisions", 1):
+    if state.revisions < state.max_revisions:
         return "revise"
 
     return "done"
@@ -359,13 +339,13 @@ def route_after_review(state: TDDState) -> str:
 
 def test_revision_node(state: TDDState) -> TDDState:
     """Replacement for test_engineer + test_revision_task."""
-    revisions = state.get("revisions", 0) + 1
+    revisions = state.revisions + 1
 
-    implementation_plan = state["implementation_plan"]
-    previous_test_suite = state.get("revised_test_suite") or state["test_suite"]
-    review_feedback = state.get("revision_review") or state["review_feedback"]
-    collected_files = state["collected_files"]
-    repo_context = state["repo_context"]
+    implementation_plan = state.implementation_plan
+    previous_test_suite = state.revised_test_suite or state.test_suite
+    review_feedback = state.revision_review or state.review_feedback
+    collected_files = state.collected_files
+    repo_context = state.repo_context
 
     prompt = f"""
 You are a TDD Test Developer.
@@ -485,8 +465,8 @@ Do not introduce new requirements that were not part of the prior review.
 
 def write_failing_tests_node(state: TDDState) -> TDDState:
     """Writes the final generated/revised failing test draft."""
-    path = Path(state.get("failing_tests_path", "failing_tests_draft.py"))
-    path.write_text(state["final_test_suite"], encoding="utf-8")
+    path = Path(state.failing_tests_path)
+    path.write_text(state.final_test_suite, encoding="utf-8")
     return {"failing_tests_path": str(path)}
 
 
@@ -568,4 +548,4 @@ if __name__ == "__main__":
     )
 
     print(f"Wrote {final_state['failing_tests_path']}")
-    print(f"Approved: {final_state.get('approved', False)}")
+    print(f"Approved: {final_state.approved}")
