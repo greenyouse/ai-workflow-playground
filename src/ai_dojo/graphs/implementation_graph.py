@@ -1,26 +1,13 @@
-"""LangGraph migration of ai_dojo.flows.implementation_flow.
-
-CrewAI flow shape:
-    prepare_context_and_run
-        -> planning_crew
-        -> review_crew
-        -> approved? finalization_crew : revision_crew
-        -> loop review until approved or max_revisions
-
-LangGraph shape:
-    collect_context
-        -> planning
-        -> review
-        -> conditional: finalize or revise
-        -> revise loops back to review
+"""
+Takes an issue and code path and produces an implementation plan.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
-import sys
-from typing import TypedDict
+from pathlib import Path
+from pydantic import BaseModel
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
@@ -28,26 +15,26 @@ from langgraph.graph import END, START, StateGraph
 from ai_dojo.utils.repo_context_collector import RepoContextCollector
 
 
-class ImplementationState(TypedDict, total=False):
-    issue: str
-    code_path: str
+class ImplementationState(BaseModel):
+    issue: str = ""
+    code_path: str = ""
 
-    repo_context_content: str
-    is_context_truncated: bool
-    collected_files: str
+    repo_context_content: str = ""
+    is_context_truncated: bool = False
+    collected_files: str = ""
 
-    issue_analysis: str
-    draft_plan: str
-    review_feedback: str
-    revised_plan: str
+    issue_analysis: str = ""
+    draft_plan: str = ""
+    review_feedback: str = ""
+    revised_plan: str = ""
 
-    revision_count: int
-    max_revisions: int
-    approved: bool
+    revision_count: int = 0
+    max_revisions: int = 3
+    approved: bool = False
 
-    final_result: str
-    implementation_draft_path: str
-    last_error: str
+    final_result: str = ""
+    implementation_draft_path: str = "implementation_draft.md"
+    last_error: str = ""
 
 
 def _llm():
@@ -64,8 +51,8 @@ def _is_approved(text: str) -> bool:
 
 def collect_context_node(state: ImplementationState) -> ImplementationState:
     """Replacement for prepare_context_and_run."""
-    issue = state.get("issue", "")
-    code_path = state.get("code_path", "")
+    issue = state.issue
+    code_path = state.code_path
 
     if not issue:
         raise ValueError("State 'issue' must be provided.")
@@ -86,19 +73,19 @@ def collect_context_node(state: ImplementationState) -> ImplementationState:
         "repo_context_content": repo_ctx.content,
         "is_context_truncated": repo_ctx.is_truncated,
         "collected_files": repo_ctx.file_list,
-        "revision_count": state.get("revision_count", 0),
-        "max_revisions": state.get("max_revisions", 3),
+        "revision_count": state.revision_count,
+        "max_revisions": state.max_revisions,
         "approved": False,
     }
 
 def route_after_collect_context(state: ImplementationState) -> str:
-    if state.get("last_error"):
+    if state.last_error:
         return "write_error"
     return "issue_analysis"
 
 def issue_analysis_node(state: ImplementationState) -> ImplementationState:
     """Replacement for planner + issue_analysis_task."""
-    issue = state["issue"]
+    issue = state.issue
 
     prompt = f"""
 You are a Project Strategy Lead.
@@ -139,10 +126,10 @@ A structured issue analysis containing:
 
 def implementation_drafting_node(state: ImplementationState) -> ImplementationState:
     """Replacement for implementer + implementation_drafting_task."""
-    issue = state["issue"]
-    issue_analysis = state["issue_analysis"]
-    repo_context = state["repo_context_content"]
-    collected_files = state["collected_files"]
+    issue = state.issue
+    issue_analysis = state.issue_analysis
+    repo_context = state.repo_context_content
+    collected_files = state.collected_files
 
     prompt = f"""
 You are an Implementation Engineer.
@@ -198,10 +185,10 @@ Ground all findings in the repository context. Do not invent missing code.
 
 def review_node(state: ImplementationState) -> ImplementationState:
     """Replacement for reviewer + draft_review_task."""
-    issue = state["issue"]
-    implementation_plan = state.get("revised_plan") or state["draft_plan"]
-    repo_context = state["repo_context_content"]
-    collected_files = state["collected_files"]
+    issue = state.issue
+    implementation_plan = state.revised_plan or state.draft_plan
+    repo_context = state.repo_context_content
+    collected_files = state.collected_files
 
     prompt = f"""
 You are a Technical Quality Critic.
@@ -257,13 +244,10 @@ Then include concise review feedback explaining the decision.
 
 def route_after_review(state: ImplementationState) -> str:
     """Conditional replacement for CrewAI route_after_review."""
-    if state.get("approved", False):
+    if state.approved:
         return "finalize"
 
-    revision_count = state.get("revision_count", 0)
-    max_revisions = state.get("max_revisions", 3)
-
-    if revision_count >= max_revisions:
+    if state.revision_count >= state.max_revisions:
         return "finalize"
 
     return "revise"
@@ -271,13 +255,13 @@ def route_after_review(state: ImplementationState) -> str:
 
 def revision_node(state: ImplementationState) -> ImplementationState:
     """Replacement for implementer + revise_issue_task."""
-    issue = state["issue"]
-    implementation_plan = state.get("revised_plan") or state["draft_plan"]
-    review_feedback = state["review_feedback"]
-    repo_context = state["repo_context_content"]
-    collected_files = state["collected_files"]
+    issue = state.issue
+    implementation_plan = state.revised_plan or state.draft_plan
+    review_feedback = state.review_feedback
+    repo_context = state.repo_context_content
+    collected_files = state.collected_files
 
-    revision_count = state.get("revision_count", 0) + 1
+    revision_count = state.revision_count + 1
 
     prompt = f"""
 You are an Implementation Engineer.
@@ -331,12 +315,12 @@ Ground all findings in the repository context. Do not invent missing context.
 
 def finalization_node(state: ImplementationState) -> ImplementationState:
     """Replacement for synthesizer + final_draft_synthesis_task."""
-    issue = state["issue"]
-    implementation_plan = state.get("revised_plan") or state["draft_plan"]
-    review_feedback = state.get("review_feedback", "")
-    approved = state.get("approved", False)
-    revision_count = state.get("revision_count", 0)
-    max_revisions = state.get("max_revisions", 3)
+    issue = state.issue
+    implementation_plan = state.revised_plan or state.draft_plan
+    review_feedback = state.review_feedback or ""
+    approved = state.approved
+    revision_count = state.revision_count
+    max_revisions = state.max_revisions
 
     prompt = f"""
 You are a Documentation Specialist.
@@ -397,17 +381,12 @@ fences.
     return {"final_result": last_message.content}
 
 
-def write_implementation_draft_node(
-    state: ImplementationState,
-) -> ImplementationState:
+def write_implementation_draft_node(state: ImplementationState) -> ImplementationState:
     """Replacement for output_file='implementation_draft.md'."""
-    path = state.get("implementation_draft_path", "implementation_draft.md")
-    content = state.get("final_result", "Error: No final result was produced.")
-
-    with open(path, "w", encoding="utf-8") as file:
-        file.write(content)
-
-    return {"implementation_draft_path": path}
+    path = Path(state.implementation_draft_path)
+    content = state.final_result or "Error: No final result was produced."
+    path.write_text(content, encoding="utf-8")
+    return {"implementation_draft_path": str(path)}
 
 
 def build_implementation_graph():
@@ -428,8 +407,8 @@ def build_implementation_graph():
         "collect_context",
         route_after_collect_context,
         {
-         "issue_analysis": "issue_analysis",
-        "write_error": "write_implementation_draft",
+            "issue_analysis": "issue_analysis",
+            "write_error": "write_implementation_draft",
         },
     )
 
@@ -475,7 +454,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--code-path")
     parser.add_argument("--issue")
-    parser.add_argument("--max-revisions", type=int, max=3)
+    parser.add_argument("--max-revisions", type=int, default=3)
     parser.add_argument("--output", default="implementation_draft.md")
     args = parser.parse_args()
 
@@ -483,7 +462,7 @@ if __name__ == "__main__":
         issue=args.issue,
         code_path=args.code_path,
         max_revisions=args.max_revisions,
-        output=args.output,
+        implementation_draft_path=args.output,
     )
 
-    print(f"Wrote {final_state['implementation_draft_path']}")
+    print(f"Wrote {final_state.implementation_draft_path}")
