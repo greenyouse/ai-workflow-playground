@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
