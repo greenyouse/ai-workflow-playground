@@ -1,37 +1,29 @@
-"""LangGraph migration of ai_dojo.crews.idea_planning.
-
-CrewAI version:
-    planner -> scoping_task
-    planning_researcher -> context_gathering_task
-    reviewer -> quality_review_task
-    synthesizer -> finalization_task -> project_plan.md
-
-Run example:
-    python -m ai_dojo.graphs.idea_planning_graph ./src "Add user authentication"
+"""
+Takes an idea and translates it into an implementation plan.
 """
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import TypedDict
+from pydantic import BaseModel
 
 from langchain.agents import create_agent
 from langgraph.graph import END, START, StateGraph
 from ai_dojo.utils.repo_context_collector import RepoContextCollector
 
 
-class IdeaPlanningState(TypedDict, total=False):
+class IdeaPlanningState(BaseModel):
     idea: str
-    code_path: str
-    scoping_brief: str
-    research_summary: str
-    review_report: str
-    project_plan: str
-    project_plan_path: str
-    repo_context: str
-    is_context_truncated: bool
-    collected_files: str
+    code_path: str = ""
+    scoping_brief: str = ""
+    research_summary: str = ""
+    review_report: str = ""
+    project_plan: str = ""
+    project_plan_path: str = "project_plan.md"
+    repo_context: str = ""
+    is_context_truncated: bool = False
+    collected_files: str = ""
 
 
 def _llm():
@@ -40,7 +32,7 @@ def _llm():
 
 def scoping_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for planner + scoping_task."""
-    idea = state["idea"]
+    idea = state.idea
 
     prompt = f"""
 You are a Project Strategy Lead.
@@ -78,8 +70,8 @@ A structured scoping brief containing:
 
 def context_gathering_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for planning_researcher + context_gathering_task."""
-    idea = state["idea"]
-    code_path = state.get("code_path", "")
+    idea = state.idea
+    code_path = state.code_path
 
     if not code_path:
         return {
@@ -97,9 +89,9 @@ def context_gathering_node(state: IdeaPlanningState) -> IdeaPlanningState:
 
 def quality_review_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for reviewer + quality_review_task."""
-    scoping_brief = state["scoping_brief"]
-    collected_files = state["collected_files"]
-    repo_context = state["repo_context"]
+    scoping_brief = state.scoping_brief
+    collected_files = state.collected_files
+    repo_context = state.repo_context
 
     prompt = f"""
 You are a Technical Quality Critic.
@@ -145,9 +137,9 @@ A review report containing:
 
 def finalization_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Replacement for synthesizer + finalization_task."""
-    idea = state["idea"]
-    scoping_brief = state["scoping_brief"]
-    review_report = state["review_report"]
+    idea = state.idea
+    scoping_brief = state.scoping_brief
+    review_report = state.review_report
 
     prompt = f"""
 You are a Documentation Specialist.
@@ -199,8 +191,8 @@ fences.
 
 def write_project_plan_node(state: IdeaPlanningState) -> IdeaPlanningState:
     """Explicit replacement for CrewAI Task(output_file='project_plan.md')."""
-    project_plan_path = Path(state.get("project_plan_path", "project_plan.md"))
-    project_plan_path.write_text(state["project_plan"], encoding="utf-8")
+    project_plan_path = Path(state.project_plan_path)
+    project_plan_path.write_text(state.project_plan, encoding="utf-8")
     return {"project_plan_path": str(project_plan_path)}
 
 
@@ -253,4 +245,4 @@ if __name__ == "__main__":
         project_plan_path=args.output,
     )
 
-    print(f"Wrote {final_state['project_plan_path']}")
+    print(f"Wrote {final_state.project_plan_path}")
